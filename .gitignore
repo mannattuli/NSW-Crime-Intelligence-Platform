@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+
+# Local Streamlit config
+.streamlit/secrets.toml
+
+# Sensitive environment files
+.env
+
+# Raw and processed data files
+*.csv
+*.zip
+*.parquet
+*.json
+shapefile_source/
