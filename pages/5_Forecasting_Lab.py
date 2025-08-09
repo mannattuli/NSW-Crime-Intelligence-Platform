@@ -11,7 +11,7 @@ st.set_page_config(page_title="Forecasting Lab", page_icon="🔮", layout="wide"
 # --- Data Loading ---
 @st.cache_data
 # Loads the processed crime data used for forecasting tasks.
-def load_forecasting_dataset(file_path='crime_data_processed.parquet'):
+def load_forecasting_dataset(file_path='../crime_data_processed.parquet'):
     forecasting_source_dataframe = pd.read_parquet(file_path)
     return forecasting_source_dataframe
 

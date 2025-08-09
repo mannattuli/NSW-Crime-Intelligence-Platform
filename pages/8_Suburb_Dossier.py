@@ -13,8 +13,8 @@ st.set_page_config(page_title="Suburb Dossier", page_icon="📑", layout="wide")
 # Loads the master analytics Parquet and NSW GeoJSON as a GeoDataFrame.
 def load_all_data():
     try:
-        master_analytics_dataframe = pd.read_parquet('master_analytics_data.parquet')
-        suburb_geodataframe = gpd.read_file('nsw_suburbs.json')
+        master_analytics_dataframe = pd.read_parquet('../master_analytics_data.parquet')
+        suburb_geodataframe = gpd.read_file('../nsw_suburbs.json')
         return master_analytics_dataframe, suburb_geodataframe
     except FileNotFoundError:
         return pd.DataFrame(), None

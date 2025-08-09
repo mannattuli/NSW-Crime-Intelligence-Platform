@@ -12,4 +12,5 @@ venv/
 *.zip
 # *.parquet
 *.json
+!nsw_suburbs.json
 shapefile_source/

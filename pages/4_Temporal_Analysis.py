@@ -10,7 +10,7 @@ st.set_page_config(page_title="Temporal Analysis", page_icon="📈", layout="wid
 # --- Data Loading ---
 @st.cache_data
 # Loads the processed crime data and adds temporal features for analysis.
-def load_temporal_crime_data(file_path='crime_data_processed.parquet'):
+def load_temporal_crime_data(file_path='../crime_data_processed.parquet'):
     temporal_crime_dataframe = pd.read_parquet(file_path)
     temporal_crime_dataframe['Year'] = temporal_crime_dataframe['Date'].dt.year
     temporal_crime_dataframe['Month'] = temporal_crime_dataframe['Date'].dt.month_name()
