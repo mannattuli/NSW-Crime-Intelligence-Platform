@@ -9,7 +9,7 @@ st.set_page_config(page_title="Automated Alerts", page_icon="🚨", layout="wide
 # --- Data Loading ---
 @st.cache_data
 # Loads the master analytics dataset used for anomaly detection.
-def load_master_analytics_dataset(file_path='../master_analytics_data.parquet'):
+def load_master_analytics_dataset(file_path='master_analytics_data.parquet'):
     master_analytics_dataframe = pd.read_parquet(file_path)
     return master_analytics_dataframe
 

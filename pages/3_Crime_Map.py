@@ -14,7 +14,7 @@ st.set_page_config(page_title="Crime Hotspot Map", page_icon="🗺️", layout="
 @st.cache_data
 # Loads processed crime data and NSW GeoJSON for choropleth mapping.
 def load_crime_and_geojson_data():
-    crime_dataframe = pd.read_parquet('../crime_data_processed.parquet')
+    crime_dataframe = pd.read_parquet('crime_data_processed.parquet')
     crime_dataframe['Year'] = crime_dataframe['Date'].dt.year
     crime_dataframe['Suburb'] = crime_dataframe['Suburb'].str.upper()
 

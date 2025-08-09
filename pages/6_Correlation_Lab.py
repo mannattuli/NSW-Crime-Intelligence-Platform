@@ -11,7 +11,7 @@ st.set_page_config(page_title="Correlation Lab", page_icon="🔗", layout="wide"
 # Loads the fused master analytics dataset for correlation analysis.
 def load_fused_data():
     try:
-        master_analytics_dataframe = pd.read_parquet('../master_analytics_data.parquet')
+        master_analytics_dataframe = pd.read_parquet('master_analytics_data.parquet')
         return master_analytics_dataframe
     except FileNotFoundError:
         return pd.DataFrame()

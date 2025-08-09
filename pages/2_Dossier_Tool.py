@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-PROCESSED_DATA_FILE = '../crime_data_processed.parquet'
+PROCESSED_DATA_FILE = 'crime_data_processed.parquet'
 
 # --- Page Configuration ---
 st.set_page_config(page_title="NSW Crime Intelligence Platform", page_icon="🚨", layout="wide")
