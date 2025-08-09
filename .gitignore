@@ -10,6 +10,6 @@ venv/
 # Raw and processed data files
 *.csv
 *.zip
-*.parquet
+# *.parquet
 *.json
 shapefile_source/
