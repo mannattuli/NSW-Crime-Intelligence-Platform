@@ -21,7 +21,6 @@ def load_master_data():
         st.exception(e)
         return pd.DataFrame()
 
-
 @st.cache_data
 def load_geojson_data():
     """Loads the GeoJSON file needed for mapping using the standard json library."""
