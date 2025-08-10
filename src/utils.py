@@ -1,7 +1,9 @@
+# src/utils.py
+
 import pandas as pd
 import streamlit as st
 from pathlib import Path
-import geopandas as gpd
+import json
 
 @st.cache_data
 def load_master_data():
@@ -16,11 +18,12 @@ def load_master_data():
 
 @st.cache_data
 def load_geojson_data():
-    """Loads the GeoJSON file as a GeoDataFrame."""
+    """Loads the GeoJSON file as a standard dictionary."""
     project_root = Path(__file__).parent.parent
     geojson_path = project_root / "nsw_suburbs.json"
     try:
-        return gpd.read_file(geojson_path)
+        with open(geojson_path) as f:
+            return json.load(f)
     except Exception as e:
         st.exception(e)
         return None
