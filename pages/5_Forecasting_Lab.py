@@ -1,82 +1,65 @@
-# pages/4_Forecasting_Lab.py
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from sklearn.linear_model import LinearRegression
+from src.utils import load_master_data
 
 # --- Page Config ---
 st.set_page_config(page_title="Forecasting Lab", page_icon="🔮", layout="wide")
-
-# --- Data Loading ---
-@st.cache_data
-# Loads the processed crime data used for forecasting tasks.
-def load_forecasting_dataset(file_path='crime_data_processed.parquet'):
-    forecasting_source_dataframe = pd.read_parquet(file_path)
-    return forecasting_source_dataframe
 
 # --- Main App ---
 st.title("🔮 Crime Forecasting Lab")
 st.write("Use historical data to train a simple model and forecast future crime trends.")
 
-forecasting_source_dataframe = load_forecasting_dataset()
+# Use the central function to load the master dataset
+master_df = load_master_data()
 
-# --- Sidebar Filters ---
-st.sidebar.header("🔬 Forecasting Parameters")
-suburbs = sorted(forecasting_source_dataframe['Suburb'].unique())
-offence_categories = sorted(forecasting_source_dataframe['OffenceCategory'].unique())
-
-selected_suburb = st.sidebar.selectbox("Select a Suburb to Forecast:", options=suburbs, index=suburbs.index('Sydney'))
-selected_offence = st.sidebar.selectbox("Select an Offence Category to Forecast:", options=offence_categories, index=offence_categories.index('Theft'))
-
-# --- Model Training and Forecasting ---
-st.header(f"Forecast for '{selected_offence}' in {selected_suburb}")
-
-# Isolate the specific time series for the user's selection
-suburb_offence_timeseries_dataframe = forecasting_source_dataframe[
-    (forecasting_source_dataframe['Suburb'] == selected_suburb) &
-    (forecasting_source_dataframe['OffenceCategory'] == selected_offence)
-].copy()
-
-# Ensure we have enough data to model
-if len(suburb_offence_timeseries_dataframe) < 12:
-    st.warning("Not enough historical data points (<12 months) to create a reliable forecast.")
+if master_df.empty:
+    st.error("Master data file is empty or not found.")
 else:
-    # --- Feature Engineering ---
-    # The model needs a numerical representation of time
-    suburb_offence_timeseries_dataframe['TimeIndex'] = (suburb_offence_timeseries_dataframe['Date'] - suburb_offence_timeseries_dataframe['Date'].min()).dt.days
-    
-    # --- Model Training ---
-    # X is our feature (time), y is our target (incidents)
-    time_index_feature_dataframe = suburb_offence_timeseries_dataframe[['TimeIndex']]
-    incidents_target_series = suburb_offence_timeseries_dataframe['Incidents']
+    # --- Sidebar Filters ---
+    st.sidebar.header("🔬 Forecasting Parameters")
+    suburbs = sorted(master_df['Suburb'].unique())
+    # Dynamically find the crime columns for the dropdown
+    crime_metrics = [col for col in master_df.columns if col not in ['Suburb', 'Year', 'Suburb_Clean', 'Suburb_For_Join', 'geometry', 'Index of Relative Socio-economic Advantage and Disadvantage', 'Index of Economic Resources', 'Index of Education and Occupation', 'VenueCount']]
 
-    # We use a simple Linear Regression model to find the trend
-    trend_regression_model = LinearRegression()
-    trend_regression_model.fit(time_index_feature_dataframe, incidents_target_series)
+    selected_suburb = st.sidebar.selectbox("Select a Suburb to Forecast:", options=suburbs)
+    selected_offence = st.sidebar.selectbox("Select an Offence Category to Forecast:", options=crime_metrics)
 
-    # --- Forecasting ---
-    # Create future dates for the next 12 months
-    last_observed_date = suburb_offence_timeseries_dataframe['Date'].max()
-    forecast_horizon_dates = pd.date_range(start=last_observed_date + pd.DateOffset(months=1), periods=12, freq='M')
-    
-    # Create future time index for prediction
-    forecast_horizon_time_index = (forecast_horizon_dates - suburb_offence_timeseries_dataframe['Date'].min()).days.values.reshape(-1, 1)
+    # --- Model Training and Forecasting ---
+    st.header(f"Forecast for '{selected_offence}' in {selected_suburb}")
 
-    # Make predictions for the future
-    forecast_incident_predictions_array = trend_regression_model.predict(forecast_horizon_time_index)
-    forecast_incident_predictions_array[forecast_incident_predictions_array < 0] = 0 
+    # Isolate the specific time series for the user's selection
+    time_series_df = master_df[['Year', 'Suburb', selected_offence]].copy()
+    time_series_df = time_series_df[time_series_df['Suburb'] == selected_suburb]
+    # Create a proper date for plotting
+    time_series_df['Date'] = pd.to_datetime(time_series_df['Year'].astype(str) + '-12-31') 
 
-    # --- Visualization ---
-    forecasting_chart = go.Figure()
+    if len(time_series_df) < 3: # Need at least 3 data points for a trend
+        st.warning("Not enough historical data points (<3 years) to create a reliable forecast.")
+    else:
+        # --- Feature Engineering ---
+        time_series_df['TimeIndex'] = (time_series_df['Date'] - time_series_df['Date'].min()).dt.days
+        
+        # --- Model Training ---
+        X_train = time_series_df[['TimeIndex']]
+        y_train = time_series_df[selected_offence]
 
-    # 1. Add historical data
-    forecasting_chart.add_trace(go.Scatter(x=suburb_offence_timeseries_dataframe['Date'], y=suburb_offence_timeseries_dataframe['Incidents'], mode='lines', name='Historical Incidents'))
-    
-    # 2. Add the model's trend line over the historical data
-    forecasting_chart.add_trace(go.Scatter(x=suburb_offence_timeseries_dataframe['Date'], y=trend_regression_model.predict(time_index_feature_dataframe), mode='lines', name='Learned Trend', line={'dash': 'dot'}))
+        model = LinearRegression()
+        model.fit(X_train, y_train)
 
-    # 3. Add the forecasted data
-    forecasting_chart.add_trace(go.Scatter(x=forecast_horizon_dates, y=forecast_incident_predictions_array, mode='lines', name='Forecasted Trend', line={'color': 'red'}))
-    
-    st.plotly_chart(forecasting_chart, use_container_width=True)
+        # --- Forecasting ---
+        last_date = time_series_df['Date'].max()
+        # Forecast for the next 3 years
+        future_dates = pd.date_range(start=last_date + pd.DateOffset(years=1), periods=3, freq='A-DEC')
+        future_time_index = (future_dates - time_series_df['Date'].min()).days.values.reshape(-1, 1)
+        future_predictions = model.predict(future_time_index)
+        future_predictions[future_predictions < 0] = 0 
+
+        # --- Visualization ---
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=time_series_df['Date'], y=y_train, mode='lines+markers', name='Historical Incidents'))
+        fig.add_trace(go.Scatter(x=time_series_df['Date'], y=model.predict(X_train), mode='lines', name='Learned Trend', line={'dash': 'dot'}))
+        fig.add_trace(go.Scatter(x=future_dates, y=future_predictions, mode='lines+markers', name='Forecast (3 Years)', line={'color': 'red'}))
+        
+        st.plotly_chart(fig, use_container_width=True)
