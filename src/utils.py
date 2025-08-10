@@ -21,16 +21,17 @@ def load_master_data():
         st.exception(e)
         return pd.DataFrame()
 
+
 @st.cache_data
 def load_geojson_data():
-    """Loads the GeoJSON file needed for mapping."""
+    """Loads the GeoJSON file needed for mapping using the standard json library."""
     project_root = Path(__file__).parent.parent
     geojson_path = project_root / "nsw_suburbs.json"
     
     try:
-        # Load the GeoJSON directly into a GeoDataFrame for robust handling
-        suburb_geometries = gpd.read_file(geojson_path)
-        return suburb_geometries
+        with open(geojson_path) as f:
+            geojson_data = json.load(f)
+        return geojson_data
     except Exception as e:
         st.exception(e)
         return None
