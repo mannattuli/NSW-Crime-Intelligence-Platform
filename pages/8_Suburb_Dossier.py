@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from src.utils import load_master_data, load_geojson_data
+
 # --- Page Config ---
 st.set_page_config(page_title="Suburb Dossier", page_icon="📑", layout="wide")
 
@@ -13,14 +14,11 @@ master_df = load_master_data()
 suburb_geometries = load_geojson_data()
 
 if master_df.empty or suburb_geometries is None:
-    st.error("Master data files not found. Please ensure `fuse_data.py` has run successfully.")
+    st.error("Master data files not found. Please ensure all data processing scripts have run successfully.")
 else:
     # --- Sidebar Selector ---
     suburbs = sorted(master_df['Suburb'].unique())
-    selected_suburb = st.selectbox(
-        "Select a Suburb for In-Depth Analysis:", 
-        options=suburbs
-    )
+    selected_suburb = st.selectbox("Select a Suburb for In-Depth Analysis:", options=suburbs)
 
     # --- Filter all data for the selected suburb ---
     suburb_df = master_df[master_df['Suburb'] == selected_suburb].copy()
@@ -32,8 +30,7 @@ else:
     latest_year_data = suburb_df[suburb_df['Year'] == suburb_df['Year'].max()]
     if not latest_year_data.empty:
         col1, col2, col3 = st.columns(3)
-        ier_col = 'Index of Economic Resources'
-        ieo_col = 'Index of Education and Occupation'
+        ier_col, ieo_col = 'Index of Economic Resources', 'Index of Education and Occupation'
         with col1:
             st.metric("Venue Count", f"{latest_year_data['VenueCount'].iloc[0]}")
         with col2:
@@ -56,8 +53,7 @@ else:
             geojson=suburb_geometry.geometry,
             locations='Suburb',
             featureidkey="properties.suburb_name",
-            mapbox_style="carto-positron",
-            zoom=12,
+            mapbox_style="carto-positron", zoom=12,
             center={"lat": center_lat, "lon": center_lon},
             opacity=0.3
         )
