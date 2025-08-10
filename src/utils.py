@@ -2,7 +2,6 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 import json
-import geopandas as gpd
 
 @st.cache_data
 def load_master_data():
