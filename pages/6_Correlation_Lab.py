@@ -1,20 +1,15 @@
-# pages/6_Correlation_Lab.py
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
 from src.utils import load_master_data
 
-# --- Page Config ---
 st.set_page_config(page_title="Correlation Lab", page_icon="🔗", layout="wide")
 
-# --- Automated Interpretation Function ---
 # Analyzes correlation strength and flags high-residual outliers.
 def generate_insights(dataframe, x_col, y_col):
     insights = []
     
-    # 1. Analyze the correlation strength
     correlation = dataframe[x_col].corr(dataframe[y_col])
     corr_strength = "weak"
     if abs(correlation) > 0.7: corr_strength = "very strong"
@@ -27,7 +22,6 @@ def generate_insights(dataframe, x_col, y_col):
     else:
         insights.append(f"🔎 **Weak Correlation Found:** There appears to be no significant correlation ({correlation:.2f}) between {x_col} and {y_col}.")
 
-    # 2. Find the biggest outliers from the trendline
     model = np.polyfit(dataframe[x_col], dataframe[y_col], 1)
     predict = np.poly1d(model)
     dataframe['residuals'] = dataframe[y_col] - predict(dataframe[x_col])
@@ -38,16 +32,14 @@ def generate_insights(dataframe, x_col, y_col):
 
     return insights
 
-# --- Main App ---
 st.title("🔗 Correlation Lab")
 st.write("Investigate relationships between crime and socio-economic factors. Each point on the chart is a suburb.")
 
 master_df = load_master_data()
 
 if master_df.empty:
-    st.error("Master data file is empty or not found. Please run `fuse_data.py` successfully first.")
+    st.error("Master data file is empty or not found.")
 else:
-    # --- Sidebar Filters ---
     st.sidebar.header("🔬 Lab Controls")
     all_cols = master_df.columns.tolist()
     socio_metrics = [col for col in ['Index of Relative Socio-economic Advantage and Disadvantage', 'Index of Economic Resources', 'Index of Education and Occupation', 'VenueCount'] if col in all_cols]
@@ -66,14 +58,12 @@ else:
         if year_df.empty or y_axis not in year_df.columns:
             st.warning(f"No data for '{y_axis}' in {selected_year}.")
         else:
-            # --- Display Automated Insights ---
             st.subheader("Automated Insights")
             with st.container(border=True):
                 insights = generate_insights(year_df, x_axis, y_axis)
                 for insight in insights:
                     st.markdown(f"- {insight}")
             
-            # --- The Chart ---
             st.subheader(f"Interactive Plot: {y_axis} vs. {x_axis}")
             correlation_fig = px.scatter(
                 year_df, x=x_axis, y=y_axis,

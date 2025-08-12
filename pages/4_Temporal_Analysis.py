@@ -1,44 +1,33 @@
-# pages/4_Temporal_Analysis.py
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from src.utils import load_processed_crime_data # <-- IMPORT THE NEW CENTRAL FUNCTION
+from src.utils import load_processed_crime_data
 
-# --- Page Config ---
-st.set_page_config(page_title="Temporal Analysis", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Trend Analysis", page_icon="📈", layout="wide")
+st.title("📈 Trend Analysis Dashboard")
+st.write("Analyze historical crime trends over time to identify weekly, seasonal, and long-term patterns.")
 
-# --- Main Application ---
-st.title("📈 Temporal Crime Pattern Analysis")
-st.write("Analyze crime trends over time. Select criteria from the sidebar to begin.")
-
-# Use the central function to load the data with monthly granularity
 crime_df = load_processed_crime_data()
 
 if crime_df.empty:
-    st.error("Could not load temporal crime data. Please run process_data.py.")
+    st.error("Could not load temporal crime data.")
 else:
-    # --- Feature Extraction ---
     crime_df['Year'] = crime_df['Date'].dt.year
     crime_df['Month'] = crime_df['Date'].dt.month_name()
     crime_df['DayOfWeek'] = crime_df['Date'].dt.day_name()
 
-    # --- Sidebar Filters ---
     st.sidebar.header("🗓️ Temporal Filters")
     suburbs = sorted(crime_df['Suburb'].unique())
     offence_categories = sorted(crime_df['OffenceCategory'].unique())
 
-    # Safely select defaults without hardcoding
     selected_suburb = st.sidebar.selectbox("Select a Suburb", options=suburbs)
     selected_offence = st.sidebar.selectbox("Select an Offence Category", options=offence_categories)
 
-    # --- Filtering Logic ---
     filtered_df = crime_df[
         (crime_df['Suburb'] == selected_suburb) &
         (crime_df['OffenceCategory'] == selected_offence)
     ]
 
-    # --- Main Page Display ---
     if filtered_df.empty:
         st.warning(f"No '{selected_offence}' data found for {selected_suburb}.")
     else:
